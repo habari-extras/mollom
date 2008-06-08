@@ -4,6 +4,15 @@
  *
  * This source file can be used to communicate with mollom (http://mollom.com)
  *
+ * The class is documented in the file itself, but you can find more documentation and examples on the docs-page (http://mollom.crsolutions.be/docs).
+ * If you find any bugs help me out and report them. Reporting can be done by sending an email to php-mollom-bugs[at]verkoyen[dot]eu. If you report a bug, make sure you give me enough information (include your code). 
+ * If you have questions, try the Mollom-forum, don't send them by mail, I won't read them.
+ * 
+ * Changelog since 1.0.1
+ * - Fixed a nasty bug. Possible infinite loop in doCall().
+ * - Fixed getServerList. I misinterpreted the documentation, so now the defaultserver is xmlrpc.mollom.com instead of the first fallback-server.
+ * - Fixed the timeout-issue. With fsockopen the timeout on connect wasn't respected. Rewrote the doCall function to use CURL over sockets.
+ * 
  * License
  * Copyright (c) 2008, Tijs Verkoyen. All rights reserved.
  *
@@ -15,12 +24,11 @@
  * This software is provided by the copyright holders and contributors "as is" and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.
  *
  * @author			Tijs Verkoyen <mollom@verkoyen.eu>
- * @version			1.0
+ * @version			1.1.0
  *
  * @copyright		Copyright (c) 2008, Tijs Verkoyen. All rights reserved.
  * @license			http://mollom.local/license BSD License
  */
-
 class Mollom
 {
 	/**
@@ -78,7 +86,7 @@ class Mollom
 	 *
 	 * @var	string
 	 */
-	private static $userAgent = 'MollomPHP/0.1';
+	private static $userAgent = 'MollomPHP/1.1.0';
 
 
 	/**
@@ -106,7 +114,9 @@ class Mollom
 		switch ($type)
 		{
 			case 'string':
-				return '<value><string><![CDATA['. $value .']]></string></value>'."\n";
+				// escape it, cause Mollom can't handle CDATA (no pun intended)
+				$value = htmlspecialchars($value, ENT_QUOTES, 'ISO-8859-15');
+				return '<value><string>'. $value .'</string></value>'."\n";
 
 			case 'array':
 				// init struct
@@ -337,39 +347,51 @@ class Mollom
 		$requestBody .= '	</params>' ."\n";
 		$requestBody .= '</methodCall>' ."\n";
 
-		// build headers
-		$requestHeaders = 'POST /'. self::$version .' HTTP/1.0'."\n";
-		$requestHeaders .= 'User-Agent: '. self::$userAgent ."\n";
-		$requestHeaders .= 'Host: '. $server ."\n";
-		$requestHeaders .= 'Content-Type: text/xml'."\n";
-		$requestHeaders .= 'Content-length: '. strlen($requestBody) ."\n";
-		$requestHeaders .= "\n";
-		//echo(Options::get( 'mollom:private_key' ).Options::get( 'mollom:public_key' ).self::$publicKey."\n\n".$requestHeaders.$requestBody); exit;
-		// create socket
-		$socket = @fsockopen($server, 80);
-		if($socket === false) throw new Exception('The client couldn\'t connect to '. $server .'.');
+		// create curl
+		$curl = @curl_init();
 
-		// set timeout
-		@stream_set_timeout($socket, self::$timeout);
-
-		// write to socket
-		$write = @fwrite($socket, $requestHeaders.$requestBody);
-		if($write === false) throw new Exception('The client couldn\'t send data.');
-
+		// set useragent
+		@curl_setopt($curl, CURLOPT_USERAGENT, self::$userAgent);
+		
+		// set options
+		@curl_setopt($curl, CURLOPT_POST, true);
+		@curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+		@curl_setopt($curl, CURLOPT_HEADER, true);
+		@curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		@curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, self::$timeout);
+		@curl_setopt($curl, CURLOPT_TIMEOUT, self::$timeout);
+		
+		// set url
+		@curl_setopt($curl, CURLOPT_URL, $server .'/'. self::$version);
+		
+		// set body
+		@curl_setopt($curl, CURLOPT_POSTFIELDS, $requestBody);
+		
 		// get response
-		$response = @stream_get_contents($socket);
-		if($response === false) throw new Exception('The client couldn\'t read the response data.');
+		$response = @curl_exec($curl);
+		
+		// get errors
+		$errorNumber = (int) @curl_errno($curl);
+		$errorString = @curl_error($curl);
+		
+		// close
+		@curl_close($curl);
+		
+		// validate response
+		if($response === false || $errorNumber != 0)
+		{			
+			// increment counter
+			$counter++;
+			
+			// no servers left
+			if($errorNumber == 28 && !isset(self::$serverList[$counter]) && $countServerList != 0) throw new Exception('No more servers available, try to increase the timeout.');
 
-		// get meta
-		$info = @stream_get_meta_data($socket);
-
-		// close socket
-		@fclose($socket);
-
-		// if connection times out do call again
-		if($info['timed_out'] && !isset(self::$serverList[$counter]) && $countServerList != 0) throw new Exception('No more servers available, try to increase the timeout.');
-
-		if($info['timed_out'] && isset(self::$serverList[$counter])) self::doCall($method, $parameters, self::$serverList[$counter], $counter++);
+			// timeout
+			elseif($errorNumber == 28 && isset(self::$serverList[$counter])) return self::doCall($method, $parameters, self::$serverList[$counter], $counter);
+			
+			// other error
+			else throw new Exception('Something went wrong. Maybe the following message can be handy.<br />'. $errorString, $errorNumber);
+		} 
 
 		// process response
 		$parts = explode("\r\n\r\n", $response);
@@ -413,7 +435,7 @@ class Mollom
 					if(self::$serverList === null) self::getServerList();
 
 					// do call again
-					self::doCall($method, $parameters, self::$serverList[$counter], $counter++);
+					return self::doCall($method, $parameters, self::$serverList[$counter], $counter++);
 				break;
 
 				default:
@@ -536,7 +558,10 @@ class Mollom
 		// validate
 		if(!isset($responseString->params->param->value->array->data->value)) throw new Exception('Invalid response in getServerList.');
 
-		// loop servers
+		// set the default as first
+		self::$serverList[] = self::$serverHost;
+		
+		// loop servers and add them
 		foreach ($responseString->params->param->value->array->data->value as $server) self::$serverList[] = (string) $server->string;
 
 		// return
@@ -694,7 +719,7 @@ class Mollom
 	 */
 	public static function setUserAgent($newUserAgent)
 	{
-		self::$userAgent = (string) $newUserAgent;
+		self::$userAgent .=  ' '. (string) $newUserAgent;
 	}
 
 
