@@ -39,13 +39,17 @@
 		<h1><a href="<?php Site::out_url('habari'); ?>" title="<?php _e('Go to Site'); ?>"><?php Options::out('title'); ?></a></h1>
 
 		<div class="container">
-			<p>You comment did not pass our spam filter. Please enter the text you see on the box below to verify you are not a spam bot and your comment is valid. Thank You and sorry for the inconveneance</p>
+			<p><?php _e( 'You comment did not pass our spam filter. Please enter the text you see on the box below to verify you are not a spam bot and your comment is valid. Thank You and sorry for the inconveneance', 'mollom' ); ?></p>
 
 				<form method="post" action="<?php URL::out( 'mollom_fallback', array( 'fallback' => 'captcha' ) ); ?>">
 					<p>
-						<?php echo $theme->captcha['html']; ?><br />
-						<label><input type="text" name="mollom_captcha" id="mollom_captcha" /><br /> Enter the text you see above</label>
+						<?php echo $theme->captcha['html']; ?>
+						
+						<?php echo $theme->audio_captcha['html']; ?> <br />
+						
+						<label><input type="text" name="mollom_captcha" id="mollom_captcha" /><br /> <?php _e( 'Enter the text you see in the image above', 'mollom' ); ?></label>
 					</p>
+					<p><input type="submit" value="Submit" /></p>
 
 				</form>
 

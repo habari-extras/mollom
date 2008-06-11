@@ -287,6 +287,7 @@ class Mollom
 	 */
 	private static function doCall($method, $parameters = array(), $server = null, $counter = 0)
 	{
+		//utils::debug(self::$serverList); exit;
 		// count available servers
 		$countServerList = count(self::$serverList);
 
@@ -685,10 +686,7 @@ class Mollom
 	public static function setServerList($servers)
 	{
 		// redefine
-		$server = (array) $servers;
-
-		// loop servers
-		foreach ($servers as $server) self::$serverList[] = $server;
+		self::$serverList = (array) $servers;
 	}
 
 
@@ -719,7 +717,7 @@ class Mollom
 	 */
 	public static function setUserAgent($newUserAgent)
 	{
-		self::$userAgent .=  ' '. (string) $newUserAgent;
+		self::$userAgent = (string) $newUserAgent;
 	}
 
 
