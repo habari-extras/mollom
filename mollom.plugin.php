@@ -42,7 +42,8 @@ class MollomPlugin extends Plugin
 			Session::notice( _t( 'Please set your Mollom API Keys in the configuration.', 'mollom' ) );
 			Options::set( 'mollom__public_key', '' );
 			Options::set( 'mollom__private_key', '' );
-			Options::set( 'mollom__servers', '' );
+			Options::set( 'mollom__servers', array() );
+			CronTab::add_monthly_cron( 'mollom', 'mollom_update_server_list_cron', 'Cron job to update mollom server list every month' );
 		}
 	}
 	
@@ -113,10 +114,11 @@ class MollomPlugin extends Plugin
 		try {
 			$servers = Mollom::getServerList();
 			Options::set( 'mollom__servers', $servers );
+			Mollom::setServerList( $servers );
 		}
 		catch( Exception $e ) {
 			EventLog::log( $e->getMessage(), 'notice', 'comment', 'Mollom' );
-			//return array( $e->getMessage() );
+			return array( _t( 'The mollom server list could not be fetched.', 'mollom' ) );
 		}
 
 		try {
@@ -138,20 +140,34 @@ class MollomPlugin extends Plugin
 		$this->add_template( 'dash_module_mollom', dirname(__FILE__) . '/templates/dash_module_mollom.php' );
 
 		Mollom::setUserAgent( 'habari/' . Version::get_habariversion() );
-		Mollom::setPrivateKey( Options::get( 'mollom__private_key' ) );
-		Mollom::setPublicKey( Options::get( 'mollom__public_key' ) );
 		
-		if ( ! Options::get( 'mollom__private_key' ) ) {
+		if ( Options::get( 'mollom__private_key' ) ) {
+			Mollom::setPrivateKey( Options::get( 'mollom__private_key' ) );
+			Mollom::setPublicKey( Options::get( 'mollom__public_key' ) );
+			
 			if ( ! $servers = Options::get( 'mollom__servers' ) ) {
 				try {
 					$servers = Mollom::getServerList();
 					Options::set( 'mollom__servers', $servers );
+					Mollom::setServerList( $servers );
 				}
 				catch( Exception $e ) {
 					EventLog::log( $e->getMessage(), 'crit', 'comment', 'Mollom' );
 				}
 			}
-			Mollom::setServerList( $servers );
+		}
+	}
+	
+	public function filter_mollom_update_server_list_cron( $result )
+	{
+		try {
+			$servers = Mollom::getServerList();
+			Options::set( 'mollom__servers', $servers );
+			return true;
+		}
+		catch( Exception $e ) {
+			EventLog::log( $e->getMessage(), 'crit', 'comment', 'Mollom' );
+			return fasle;
 		}
 	}
 
@@ -243,7 +259,10 @@ class MollomPlugin extends Plugin
 			exit;
 		}
 	}
-
+	
+	/**
+	 * @todo use formui
+	 */
 	private function send_captcha( $comment= null )
 	{
 		Session::add_to_set( 'mollom', $comment, 'comment' );

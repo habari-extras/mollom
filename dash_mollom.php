@@ -1,4 +1,3 @@
-<div class="close">&nbsp;</div>
 <div class="modulecore">
 	<h2>Mollom Stats</h2><div class="handle">&nbsp;</div>
 	<ul class=items">
