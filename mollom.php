@@ -443,7 +443,9 @@ class Mollom
 					throw new Exception('[error '.$code .'] '. $message, $code);
 			}
 		}
-
+		
+		unset($curl);
+		unset($response);
 		// return
 		return $responseXML;
 	}

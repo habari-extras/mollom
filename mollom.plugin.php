@@ -56,6 +56,7 @@ class MollomPlugin extends Plugin
 	
 	public function filter_dash_module_mollom_stats( $module, $id, $theme )
 	{
+		$theme->mollom_stats = $this->theme_mollom_stats();
 		$module['content'] = $theme->fetch( 'mollom_stats' );
 		return $module;
 	}
@@ -127,10 +128,9 @@ class MollomPlugin extends Plugin
 	public function action_init()
 	{
 		$this->load_text_domain( 'mollom' );
-
+		
 		$this->add_template( 'mollom_fallback_captcha', dirname(__FILE__) . '/templates/mollom_fallback_captcha.php' );
-		$this->add_template( 'dash_module_mollom', dirname(__FILE__) . '/templates/dash_module_mollom.php' );
-
+		
 		Mollom::setUserAgent( 'habari/' . Version::get_habariversion() );
 		
 		if ( Options::get( 'mollom__private_key' ) ) {
@@ -146,6 +146,9 @@ class MollomPlugin extends Plugin
 				catch( Exception $e ) {
 					EventLog::log( $e->getMessage(), 'crit', 'comment', 'Mollom' );
 				}
+			}
+			else {
+				Mollom::setServerList( $servers );
 			}
 		}
 	}
@@ -165,7 +168,7 @@ class MollomPlugin extends Plugin
 
 	public function theme_mollom_stats()
 	{
-		if ( Cache::has( 'mollom_stats' ) && false ) {
+		if ( Cache::has( 'mollom_stats' ) ) {
 			$stats= Cache::get( 'mollom_stats' );
 		}
 		else {
