@@ -49,22 +49,14 @@ class MollomPlugin extends Plugin
 	
 	public function filter_dash_modules( $modules )
 	{
+		$this->add_template( 'mollom_stats', dirname( __FILE__ ) . '/templates/dash_module_mollom.php' );
 		$modules[] = 'Mollom Stats';
 		return $modules;
 	}
 	
 	public function filter_dash_module_mollom_stats( $module, $id, $theme )
 	{
-		$this->add_template( 'mollom_stats', dirname( __FILE__ ) . '/templates/dash_module_mollom.php' );
-		
 		$module['content'] = $theme->fetch( 'mollom_stats' );
-		
-		$form = new FormUI( 'dash_logs' );
-		$form->append( 'checkbox', 'remove', 'null:unused', _t('Remove this module') );
-		$form->append( 'submit', 'submit', _t('Submit') );
-		$form->properties['onsubmit'] = "dashboard.remove({$id}); return false;";
-		$module['options'] = $form->get();
-		
 		return $module;
 	}
 	
