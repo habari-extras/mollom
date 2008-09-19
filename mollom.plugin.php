@@ -74,17 +74,17 @@ class MollomPlugin extends Plugin
 		if ( $plugin_id == $this->plugin_id() ) {
 			switch ( $action ) {
 				case _t( 'Configure', 'mollom' ) :
-					$ui= new FormUI( 'mollom' );
+					$ui = new FormUI( 'mollom' );
 
-					$public_key= $ui->append( 'text', 'public_key', 'option:mollom__public_key', _t( 'Mollom Public Key: ', 'mollom' ) );
+					$public_key = $ui->append( 'text', 'public_key', 'option:mollom__public_key', _t( 'Mollom Public Key: ', 'mollom' ) );
 					$public_key->add_validator( 'validate_required' );
 					$public_key->add_validator( array( $this, 'validate_public_key' ) );
 
-					$private_key= $ui->append( 'text', 'private_key', 'option:mollom__private_key', _t( 'Mollom Private Key: ', 'mollom' ) );
+					$private_key = $ui->append( 'text', 'private_key', 'option:mollom__private_key', _t( 'Mollom Private Key: ', 'mollom' ) );
 					$private_key->add_validator( 'validate_required' );
 					$private_key->add_validator( array( $this, 'validate_private_key' ) );
 
-					$register= $ui->append( 'static', 'register', '<a href="http://mollom.com/user/register">' . _t( 'Get A New Mollom API Key.', 'mollom' ) . '</a>' );
+					$register = $ui->append( 'static', 'register', '<a href="http://mollom.com/user/register">' . _t( 'Get A New Mollom API Key.', 'mollom' ) . '</a>' );
 
 					$ui->append( 'submit', 'save', _t( 'Save' ) );
 					$ui->set_option( 'success_message', _t( 'Configuration saved' ) );
@@ -169,11 +169,11 @@ class MollomPlugin extends Plugin
 	public function theme_mollom_stats()
 	{
 		if ( Cache::has( 'mollom_stats' ) ) {
-			$stats= Cache::get( 'mollom_stats' );
+			$stats = Cache::get( 'mollom_stats' );
 		}
 		else {
 			try {
-				$stats= array();
+				$stats = array();
 				$stats['total_days']= Mollom::getStatistics( 'total_days' );
 				$stats['total_accepted']= Mollom::getStatistics( 'total_accepted' );
 				$stats['total_rejected']= Mollom::getStatistics( 'total_rejected' );
@@ -183,11 +183,11 @@ class MollomPlugin extends Plugin
 				$stats['today_rejected']= Mollom::getStatistics( 'today_rejected' );
 				
 				if ( ( (int) $stats['total_rejected'] + (int) $stats['total_accepted'] ) > 0 ) {
-					$avg= ( (int) $stats['total_rejected'] / ( (int) $stats['total_rejected'] + (int) $stats['total_accepted'] ) );
-					$avg= sprintf( '%.2f', $avg * 100 );
+					$avg = ( (int) $stats['total_rejected'] / ( (int) $stats['total_rejected'] + (int) $stats['total_accepted'] ) );
+					$avg = sprintf( '%.2f', $avg * 100 );
 				}
 				else {
-					$avg= 0;
+					$avg = 0;
 				}
 				$stats['avg']= $avg;
 				
@@ -203,7 +203,7 @@ class MollomPlugin extends Plugin
 
 	public function filter_default_rewrite_rules( $rules )
 	{
-		$rule= array();
+		$rule = array();
 		$rule['name']= 'mollom_fallback';
 		$rule['parse_regex']= '%^mollom/fallback/?$%i';
 		$rule['build_str']= 'mollom/fallback';
@@ -218,7 +218,7 @@ class MollomPlugin extends Plugin
 
 	public function action_handler_mollom_fallback( $handler_vars )
 	{
-		$comment= Session::get_set( 'mollom' );
+		$comment = Session::get_set( 'mollom' );
 		if ( isset( $comment['comment'] ) ) {
 			Plugins::act( 'mollom_fallback', $handler_vars, $comment['comment'] );
 		}
@@ -231,12 +231,12 @@ class MollomPlugin extends Plugin
 	{
 		if ( !empty( $handler_vars['mollom_captcha'] ) && !empty( $comment ) ) {
 			if ( Mollom::checkCaptcha( $comment->info->mollom_session_id, $handler_vars['mollom_captcha'] ) ) {
-				$comment->status= 'ham';
+				$comment->status = 'ham';
 				$comment->insert();
 				/**
 				 * @todo set cookie here.
 				 */
-				$anchor= '#comment-' . $comment->id;
+				$anchor = '#comment-' . $comment->id;
 				Utils::redirect( $comment->post->permalink . $anchor );
 				exit;
 			}
@@ -258,13 +258,13 @@ class MollomPlugin extends Plugin
 	/**
 	 * @todo use formui
 	 */
-	private function send_captcha( $comment= null )
+	private function send_captcha( $comment = null )
 	{
 		Session::add_to_set( 'mollom', $comment, 'comment' );
-		$theme= Themes::create();
-		$theme->comment= $comment;
-		$theme->captcha= Mollom::getImageCaptcha( $comment->info->mollom_session_id );
-		$theme->audio_captcha= Mollom::getAudioCaptcha( $comment->info->mollom_session_id );
+		$theme = Themes::create();
+		$theme->comment = $comment;
+		$theme->captcha = Mollom::getImageCaptcha( $comment->info->mollom_session_id );
+		$theme->audio_captcha = Mollom::getAudioCaptcha( $comment->info->mollom_session_id );
 		$theme->display( 'mollom_fallback_captcha' );
 	}
 
@@ -274,33 +274,33 @@ class MollomPlugin extends Plugin
 			return;
 		}
 
-		$user= User::identify();
+		$user = User::identify();
 
-		$author_name= $comment->name;
-		$author_url= $comment->url ? $comment->url : null;
-		$author_email= $comment->email ? $comment->email : null;
-		$author_id= $user instanceof User ? $user->id : null;
-		$author_open_id= ( $user instanceof User && $user->info->openid_url ) ? $user->info->openid_url : null;
-		$post_body= $comment->content;
+		$author_name = $comment->name;
+		$author_url = $comment->url ? $comment->url : null;
+		$author_email = $comment->email ? $comment->email : null;
+		$author_id = $user instanceof User ? $user->id : null;
+		$author_open_id = ( $user instanceof User && $user->info->openid_url ) ? $user->info->openid_url : null;
+		$post_body = $comment->content;
 
 		try {
-			$result= Mollom::checkContent( null, null, $post_body, $author_name, $author_url, $author_email, $author_open_id, $author_id );
-			$comment->info->mollom_session_id= $result['session_id'];
-			$comment->info->mollom_quality= $result['quality'];
+			$result = Mollom::checkContent( null, null, $post_body, $author_name, $author_url, $author_email, $author_open_id, $author_id );
+			$comment->info->mollom_session_id = $result['session_id'];
+			$comment->info->mollom_quality = $result['quality'];
 			switch ( $result['spam'] ) {
 				case 'spam':
-					$comment->status= 'spam';
+					$comment->status = 'spam';
 					if ( $comment->info->spamcheck ) {
 						$comment->info->spamcheck[]=  _t( 'Flagged as Spam by Mollom', 'mollom' );
 					}
 					else {
-						$comment->info->spamcheck= array( _t( 'Flagged as Spam by Mollom', 'mollom' ) );
+						$comment->info->spamcheck = array( _t( 'Flagged as Spam by Mollom', 'mollom' ) );
 					}
 					break;
 
 				case 'ham':
 					// mollom is 100% it is ham, so approve it
-					$comment->status= 'ham';
+					$comment->status = 'ham';
 					return;
 					break;
 
@@ -318,8 +318,8 @@ class MollomPlugin extends Plugin
 
 	public function action_admin_moderate_comments( $action, $comments, $handler )
 	{
-		$false_positives= array();
-		$false_negatives= array();
+		$false_positives = array();
+		$false_negatives = array();
 
 		foreach ( $comments as $comment ) {
 			switch ( $action ) {
