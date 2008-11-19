@@ -109,10 +109,12 @@ class MollomPlugin extends Plugin
 	{
 		Mollom::setPrivateKey( $key );
 		try {
-			Mollom::verifyKey();
+			if ( !Mollom::verifyKey() ) {
+				return array( sprintf( _t( 'Sorry, the Mollom API keys %s and %s are <b>invalid</b>. Please check to make sure the keys are entered correctly and are <b>registered for this site (%s)</b>.', 'mollom' ), $key, $form->public_key->value, Site::get_url( 'habari' ) ) );
+			}
 		}
 		catch ( Exception $e ) {
-			return array( sprintf( _t( 'Sorry, the Mollom API keys %s and %s are <b>invalid</b>. Please check to make sure the keys are entered correctly and are <b>registered for this site (%s)</b>.', 'mollom' ), $key, $form->public_key->value, Site::get_url( 'habari' ) ) );
+			return array( sprintf( _t('Sorry, the Mollom servers seem to be down.', 'mollom') );
 		}
 		
 		try {
