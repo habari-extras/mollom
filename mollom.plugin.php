@@ -114,7 +114,7 @@ class MollomPlugin extends Plugin
 			}
 		}
 		catch ( Exception $e ) {
-			return array( sprintf( _t('Sorry, the Mollom servers seem to be down.', 'mollom') );
+			return array( _t('Sorry, the Mollom servers seem to be down.', 'mollom') );
 		}
 		
 		try {
