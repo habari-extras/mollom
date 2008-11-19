@@ -109,6 +109,16 @@ class MollomPlugin extends Plugin
 	{
 		Mollom::setPrivateKey( $key );
 		try {
+			$servers = Mollom::getServerList();
+			Options::set( 'mollom__servers', $servers );
+			Mollom::setServerList( $servers );
+		}
+		catch( Exception $e ) {
+			EventLog::log( $e->getMessage(), 'notice', 'comment', 'Mollom' );
+			return array( _t('Sorry, the Mollom servers seem to be down.', 'mollom') );
+		}
+		
+		try {
 			if ( !Mollom::verifyKey() ) {
 				return array( sprintf( _t( 'Sorry, the Mollom API keys %s and %s are <b>invalid</b>. Please check to make sure the keys are entered correctly and are <b>registered for this site (%s)</b>.', 'mollom' ), $key, $form->public_key->value, Site::get_url( 'habari' ) ) );
 			}
@@ -117,15 +127,6 @@ class MollomPlugin extends Plugin
 			return array( _t('Sorry, the Mollom servers seem to be down.', 'mollom') );
 		}
 		
-		try {
-			$servers = Mollom::getServerList();
-			Options::set( 'mollom__servers', $servers );
-			Mollom::setServerList( $servers );
-		}
-		catch( Exception $e ) {
-			EventLog::log( $e->getMessage(), 'notice', 'comment', 'Mollom' );
-			return array( _t( 'The Mollom server list could not be fetched. Mollom could be down, please try again later.', 'mollom' ) );
-		}
 		return array();
 	}
 
