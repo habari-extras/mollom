@@ -330,7 +330,7 @@ class MollomPlugin extends Plugin
 		}
 	}
 
-	public function action_admin_moderate_comments( $action, $comments, ActionHandler $handler )
+	public function action_admin_moderate_comments( $action, $comments, $handler )
 	{
 		$false_negatives = 0;
 		$unwanted = 0;
