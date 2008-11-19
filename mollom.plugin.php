@@ -238,7 +238,7 @@ class MollomPlugin extends Plugin
 			die( _t( 'Sorry, we could not procces your comment.', 'mollom' ) );
 		}
 	}
-
+	
 	public function action_mollom_fallback( array $handler_vars, Comment $comment )
 	{
 		if ( !empty( $handler_vars['mollom_captcha'] ) && !empty( $comment ) ) {
@@ -367,6 +367,12 @@ class MollomPlugin extends Plugin
 		}
 		if ( $unwanted ) {
 			Session::notice( _t('Reported %d unwanted comments to Mollom', array($unwanted), 'mollom') );
+		}
+	}
+	
+	public function action_comment_info( $comment ) {
+		if(isset($comment->info->defensio_spaminess)) {
+			echo '<p class="keyval spam"><span class="label">' . _t('Mollom Quality:', 'quality') . '</span>' . '<strong>' . $comment->info->mollom_quality . '</strong></p>';
 		}
 	}
 }
