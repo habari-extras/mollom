@@ -372,7 +372,7 @@ class MollomPlugin extends Plugin
 	
 	public function action_comment_info( $comment ) {
 		if(isset($comment->info->mollom_quality)) {
-			echo '<p class="keyval spam"><span class="label">' . _t('Mollom Quality:', 'quality') . '</span>' . '<strong>' . $comment->info->mollom_quality . '</strong></p>';
+			echo '<p class="keyval spam"><span class="label">' . _t('Mollom Quality:', 'quality') . '</span>' . '<strong>' . sprintf('%.2f', $comment->info->mollom_quality) . '</strong></p>';
 		}
 	}
 }
