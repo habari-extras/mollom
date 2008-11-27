@@ -291,7 +291,7 @@ class MollomPlugin extends Plugin
 		$author_name = $comment->name;
 		$author_url = $comment->url ? $comment->url : null;
 		$author_email = $comment->email ? $comment->email : null;
-		$author_id = $user instanceof User ? $user->id : null;
+		$author_id = $user->loggedin ? $user->id : null;
 		$author_open_id = ( $user instanceof User && $user->info->openid_url ) ? $user->info->openid_url : null;
 		$post_body = $comment->content;
 
