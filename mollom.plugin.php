@@ -40,8 +40,8 @@ class MollomPlugin extends Plugin
 			Options::set( 'mollom__public_key', '' );
 			Options::set( 'mollom__private_key', '' );
 			Options::set( 'mollom__servers', array() );
-			CronTab::add_weekly_cron( 'mollom', 'mollom_update_server_list_cron', 'Cron job to update mollom server list every week' );
-			CronTab::add_hourly_cron( 'mollom', 'mollom_update_stats_cron', 'Cron job to update mollom stats every hour' );
+			CronTab::add_weekly_cron( 'mollom_server_list', 'mollom_update_server_list_cron', 'Cron job to update mollom server list every week' );
+			CronTab::add_hourly_cron( 'mollom_stats', 'mollom_update_stats_cron', 'Cron job to update mollom stats every hour' );
 		}
 	}
 	
