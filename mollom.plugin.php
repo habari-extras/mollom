@@ -228,7 +228,7 @@ class MollomPlugin extends Plugin
 		return $rules;
 	}
 
-	public function action_handler_mollom_fallback( array $handler_vars )
+	public function action_handler_mollom_fallback( SuperGlobal $handler_vars )
 	{
 		$comment = Session::get_set( 'mollom' );
 		if ( isset( $comment['comment'] ) ) {
@@ -239,7 +239,7 @@ class MollomPlugin extends Plugin
 		}
 	}
 	
-	public function action_mollom_fallback( array $handler_vars, Comment $comment )
+	public function action_mollom_fallback( SuperGlobal $handler_vars, Comment $comment )
 	{
 		if ( !empty( $handler_vars['mollom_captcha'] ) && !empty( $comment ) ) {
 			if ( Mollom::checkCaptcha( $comment->info->mollom_session_id, $handler_vars['mollom_captcha'] ) ) {
