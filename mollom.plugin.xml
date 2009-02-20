@@ -1,0 +1,9 @@
+<plugin>
+	<name>Mollom</name>
+	<author>Habari Community</author>
+	<description>Provides the Mollom content filtering webservice to Habari.</description>
+	<url>http://habariproject.org</url>
+	<version>0.2</version>
+	<license>Apache License 2.0</license>
+</plugin>
+
