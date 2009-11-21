@@ -3,7 +3,7 @@
 /**
  * Mollom Plugin for Habari
  *
- * @todo add fallback for reputaion when mollom implements api access
+ * @todo add fallback for reputation when mollom implements API access
  * @todo delete private key when deactivated
  *
  */
@@ -12,18 +12,6 @@ require "mollom.php";
 
 class MollomPlugin extends Plugin
 {
-
-	public function info()
-	{
-		return array(
-			'name' => 'Mollom',
-			'author' => 'Habari Community',
-			'description' => 'Provides the Mollom content filtering webservice to Habari.',
-			'url' => 'http://habariproject.org',
-			'version' => '0.2',
-			'license' => 'Apache License 2.0'
-			);
-	}
 
 	public function set_priorities()
 	{
