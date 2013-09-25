@@ -8,8 +8,6 @@
  *
  */
 
-require "mollom.php";
-
 class MollomPlugin extends Plugin
 {
 
@@ -33,18 +31,21 @@ class MollomPlugin extends Plugin
 		}
 	}
 	
-	public function filter_dash_modules( $modules )
+	/**
+	 * Return a list of blocks that can be used for the dashboard
+	 * @param array $block_list An array of block names, indexed by unique string identifiers
+	 * @return array The altered array
+	 */
+	public function filter_dashboard_block_list( Array $block_list )
 	{
-		$this->add_template( 'mollom_stats', dirname( __FILE__ ) . '/templates/dash_module_mollom.php' );
-		$modules[] = 'Mollom Stats';
-		return $modules;
+		$block_list['mollom_stats'] = 'Mollom Stats';
+		$this->add_template( 'dashboard.block.mollom_stats', dirname( __FILE__ ) . '/templates/dash_module_mollom.php' );
+		return $block_list;
 	}
-	
-	public function filter_dash_module_mollom_stats( $module, $id, $theme )
+
+	public function action_block_content_mollom_stats( Block $block, Theme $theme )
 	{
-		$theme->mollom_stats = $this->theme_mollom_stats();
-		$module['content'] = $theme->fetch( 'mollom_stats' );
-		return $module;
+		$block->mollom_stats = $this->theme_mollom_stats();
 	}
 	
 	public function filter_plugin_config( $actions, $plugin_id )
@@ -364,5 +365,6 @@ class MollomPlugin extends Plugin
 		}
 	}
 }
+require "mollom.php";
 
 ?>
