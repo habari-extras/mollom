@@ -8,6 +8,8 @@
  *
  */
 
+require "mollom.php";
+
 class MollomPlugin extends Plugin
 {
 
@@ -30,7 +32,7 @@ class MollomPlugin extends Plugin
 			CronTab::add_hourly_cron( 'mollom_stats', 'mollom_update_stats_cron', 'Cron job to update mollom stats every hour' );
 		}
 	}
-	
+
 	/**
 	 * Return a list of blocks that can be used for the dashboard
 	 * @param array $block_list An array of block names, indexed by unique string identifiers
@@ -38,16 +40,16 @@ class MollomPlugin extends Plugin
 	 */
 	public function filter_dashboard_block_list( Array $block_list )
 	{
-		$block_list['mollom_stats'] = 'Mollom Stats';
+		$block_list['mollom_stats'] = _t('Mollom Stats', 'mollom');
 		$this->add_template( 'dashboard.block.mollom_stats', dirname( __FILE__ ) . '/templates/dash_module_mollom.php' );
 		return $block_list;
 	}
 
 	public function action_block_content_mollom_stats( Block $block, Theme $theme )
 	{
-		$block->mollom_stats = $this->theme_mollom_stats();
+		$block->mollom_stats = $this->get_stats();
 	}
-	
+
 	public function filter_plugin_config( $actions, $plugin_id )
 	{
 		if ( $plugin_id == $this->plugin_id() ) {
@@ -81,7 +83,7 @@ class MollomPlugin extends Plugin
 			}
 		}
 	}
-	
+
 	public function formui_submit( FormUI $form )
 	{
 		Session::notice( _t('Mollom API Keys saved.', 'mollom') );
@@ -93,7 +95,7 @@ class MollomPlugin extends Plugin
 		Mollom::setPublicKey( $key );
 		return array();
 	}
-	
+
 	public function validate_private_key( $key, FormControl $control, FormUI $form )
 	{
 		Mollom::setPrivateKey( $key );
@@ -106,7 +108,7 @@ class MollomPlugin extends Plugin
 			EventLog::log( $e->getMessage(), 'notice', 'comment', 'Mollom' );
 			return array( _t('Sorry, the Mollom servers seem to be down.', 'mollom') );
 		}
-		
+
 		try {
 			if ( !Mollom::verifyKey() ) {
 				return array( sprintf( _t( 'Sorry, the Mollom API keys %s and %s are <b>invalid</b>. Please check to make sure the keys are entered correctly and are <b>registered for this site (%s)</b>.', 'mollom' ), $key, $form->public_key->value, Site::get_url( 'habari' ) ) );
@@ -115,23 +117,23 @@ class MollomPlugin extends Plugin
 		catch ( Exception $e ) {
 			return array( _t('Sorry, the Mollom servers seem to be down.', 'mollom') );
 		}
-		
+
 		return array();
 	}
 
 	public function action_init()
 	{
 		$this->load_text_domain( 'mollom' );
-		
+
 		$this->add_template( 'mollom_fallback_captcha', dirname(__FILE__) . '/templates/mollom_fallback_captcha.php' );
-		
+
 		Mollom::setUserAgent( 'habari/' . Version::get_habariversion() );
 		Mollom::$serverListRefreshCallback = array($this, 'filter_mollom_update_server_list_cron');
-		
+
 		if ( Options::get( 'mollom__private_key' ) ) {
 			Mollom::setPrivateKey( Options::get( 'mollom__private_key' ) );
 			Mollom::setPublicKey( Options::get( 'mollom__public_key' ) );
-			
+
 			if ( ! $servers = Options::get( 'mollom__servers' ) ) {
 				try {
 					$servers = Mollom::getServerList();
@@ -147,7 +149,7 @@ class MollomPlugin extends Plugin
 			}
 		}
 	}
-	
+
 	public function filter_mollom_update_server_list_cron( $result = true )
 	{
 		try {
@@ -160,14 +162,14 @@ class MollomPlugin extends Plugin
 			return false;
 		}
 	}
-	
+
 	public function filter_mollom_update_stats_cron( $result = true )
 	{
 		Cache::expire( 'mollom_stats' );
-		$this->theme_mollom_stats();
+		$this->get_stats();
 	}
 
-	public function theme_mollom_stats()
+	public function get_stats()
 	{
 		if ( Cache::has( 'mollom_stats' ) ) {
 			$stats = Cache::get( 'mollom_stats' );
@@ -182,7 +184,7 @@ class MollomPlugin extends Plugin
 				$stats['yesterday_rejected']= Mollom::getStatistics( 'yesterday_rejected' );
 				$stats['today_accepted']= Mollom::getStatistics( 'today_accepted' );
 				$stats['today_rejected']= Mollom::getStatistics( 'today_rejected' );
-				
+
 				if ( ( (int) $stats['total_rejected'] + (int) $stats['total_accepted'] ) > 0 ) {
 					$avg = ( (int) $stats['total_rejected'] / ( (int) $stats['total_rejected'] + (int) $stats['total_accepted'] ) );
 					$avg = sprintf( '%.2f', $avg * 100 );
@@ -191,7 +193,7 @@ class MollomPlugin extends Plugin
 					$avg = 0;
 				}
 				$stats['avg']= $avg;
-				
+
 				Cache::set( 'mollom_stats', $stats, 7200 );
 			}
 			catch ( Exception $e ) {
@@ -210,7 +212,7 @@ class MollomPlugin extends Plugin
 		$rule['build_str']= 'mollom/fallback';
 		$rule['handler']= 'ActionHandler';
 		$rule['action']= 'mollom_fallback';
-		$rule['description']= 'Dispatches the mollom fallback mechanism.';
+		$rule['description']= _t('Dispatches the mollom fallback mechanism.', 'mollom');
 
 		$rules[]= $rule;
 
@@ -227,7 +229,7 @@ class MollomPlugin extends Plugin
 			die( _t( 'Sorry, we could not procces your comment.', 'mollom' ) );
 		}
 	}
-	
+
 	public function action_mollom_fallback( SuperGlobal $handler_vars, Comment $comment )
 	{
 		if ( !empty( $handler_vars['mollom_captcha'] ) && !empty( $comment ) ) {
@@ -252,7 +254,7 @@ class MollomPlugin extends Plugin
 			exit;
 		}
 	}
-	
+
 	/**
 	 * @todo use formui
 	 */
@@ -350,7 +352,7 @@ class MollomPlugin extends Plugin
 					break;
 			}
 		}
-		
+
 		if ( $false_negatives ) {
 			Session::notice( _t('Reported %d false negatives to Mollom', array($false_negatives), 'mollom') );
 		}
@@ -358,13 +360,12 @@ class MollomPlugin extends Plugin
 			Session::notice( _t('Reported %d unwanted comments to Mollom', array($unwanted), 'mollom') );
 		}
 	}
-	
+
 	public function action_comment_info( $comment ) {
 		if(isset($comment->info->mollom_quality)) {
 			echo '<p class="keyval spam"><span class="label">' . _t('Mollom Quality:', 'quality') . '</span>' . '<strong>' . sprintf('%.2f', $comment->info->mollom_quality) . '</strong></p>';
 		}
 	}
 }
-require "mollom.php";
 
 ?>
